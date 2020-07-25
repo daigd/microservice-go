@@ -54,6 +54,7 @@ func main() {
 	go func() {
 		config.Logger.Printf("Server start at port:%s\n", strconv.Itoa(*servicePort))
 		// 服务启动前先注册
+		// 服务名默认是 SayHello,服务ID 由 服务名 + UUID 组成，声明健康检查的地址为 /health
 		if !discoverClient.Register(*serviceName, servicerID, "/health", *serviceHost, *servicePort, nil, config.Logger) {
 			config.Logger.Printf("Service %s register faild!\n", *serviceName)
 			// 服务注册失败，程序退出
