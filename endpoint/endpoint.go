@@ -11,7 +11,8 @@ import (
 
 // DiscoverEndpoint 服务发现 Endpoint
 type DiscoverEndpoint struct {
-	SayHelloEndpoint endpoint.Endpoint
+	SayHelloEndpoint    endpoint.Endpoint
+	HealthCheckEndpoint endpoint.Endpoint
 }
 
 // SayHelloRequest 服务请求结构体
@@ -28,5 +29,21 @@ func MakeSayHelloEndpoint(svc service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		msg := svc.SayHello()
 		return &SayHelloResponse{Message: msg}, nil
+	}
+}
+
+// HealthCheckRequest 健康检查请求体
+type HealthCheckRequest struct{}
+
+// HealthCheckResponse 健康检查响应
+type HealthCheckResponse struct {
+	Status bool `json:"status"`
+}
+
+// MakeHealthCheckEndpoint 构建健康检查响应
+func MakeHealthCheckEndpoint(svc service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		status := svc.HealthCheck()
+		return &HealthCheckResponse{Status: status}, nil
 	}
 }

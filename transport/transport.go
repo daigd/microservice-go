@@ -33,12 +33,23 @@ func MakeHTTPHandler(ctx context.Context, endpoint endpoint.DiscoverEndpoint, lo
 		encodeJSONResponse,
 		ops...,
 	))
+	// 声明并初始化 /health 请求
+	r.Methods("GET").Path("/health").Handler(kithttp.NewServer(
+		endpoint.HealthCheckEndpoint,
+		decodeHealthCheckRequest,
+		encodeJSONResponse,
+		ops...))
 	return r
 }
 
-// 对服务请求参数进行转换（解码）
+// 对say-hello 请求参数进行转换（解码）
 func decodeSayHelloRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	return &endpoint.SayHelloRequest{}, nil
+}
+
+// 对 health 请求参数进行转换
+func decodeHealthCheckRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+	return &endpoint.HealthCheckRequest{}, nil
 }
 
 // 将接口返回结果编码成 json 格式 返回
