@@ -23,8 +23,10 @@ func main() {
 	// 从命令行读取相关参数，没有则使用默认值，默认的服务地址：127.0.0.1：10086，默认的接口服务为：SayHello
 	var (
 		serviceHost = flag.String("servcie.host", "127.0.0.1", "service host")
-		servicePort = flag.Int("service.port", 10086, "service port")
+		servicePort = flag.Int("service.port", 10087, "service port")
 		serviceName = flag.String("service.name", "SayHello", "service name")
+		consulHost  = flag.String("consul.host", "127.0.0.1", "consul host")
+		consulPort  = flag.Int("consul.port", 8500, "consul port")
 	)
 	// 解析命令行参数
 	flag.Parse()
@@ -34,7 +36,12 @@ func main() {
 
 	// 声明服务发现客户端
 	var discoverClient discover.DiscoverClient
-	//TODO 未实现 DiscoverClient
+	// 初始化 DiscoverClient
+	discoverClient, err := discover.NewMyConsulDiscoverClient(*consulHost, *consulPort)
+	if err != nil {
+		config.Logger.Panicln("Get Consul Client Failed!")
+		os.Exit(1)
+	}
 	// 初始化 Service
 	svcImpl := service.NewDiscoverServiceImpl(discoverClient)
 
@@ -62,7 +69,7 @@ func main() {
 		}
 		h := handler
 		// 按指定的地址启动服务并监听请求
-		errChan <- http.ListenAndServe(*serviceHost+":"+strconv.Itoa(*servicePort), h)
+		errChan <- http.ListenAndServe(":"+strconv.Itoa(*servicePort), h)
 	}()
 
 	// 监控系统信号
@@ -73,7 +80,7 @@ func main() {
 		errChan <- fmt.Errorf("系统被迫退出:%s", <-c)
 	}()
 
-	err := <-errChan
+	err = <-errChan
 	// 发现错误，注销服务
 	discoverClient.DeRegister(servicerID, config.Logger)
 	config.Logger.Println(err)
